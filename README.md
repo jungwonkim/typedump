@@ -1,2 +1,3 @@
 # typedump
- If hexdump(1) is not enough, use typedump.
+## Usage
+$ typedump file type[char | int | float | double] offset length
