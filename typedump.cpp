@@ -38,7 +38,7 @@ void dump_double(int fd, off_t off, size_t len) {
 
 int main(int argc, char** argv) {
     if (argc < 5) {
-        fprintf(stderr, "Usage:\n %s file type offset length\n", argv[0]);
+        fprintf(stderr, "Usage:\n typedump file type[char | int | float | double] offset length\n");
         return 1;
     }
 
@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
     off_t off = atol(argv[3]);
     size_t len = atol(argv[4]);
 
-    printf("[intdump] file[%s] type[%s] offset[%ld] length[%lu]\n", file, type, off, len);
+    printf("[typedump] file[%s] type[%s] offset[%ld] length[%lu]\n", file, type, off, len);
 
     int fd = open(file, O_RDONLY);
     if (fd == -1) {
