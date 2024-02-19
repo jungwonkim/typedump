@@ -28,6 +28,14 @@ void dump_uint(int fd, off_t off, size_t len) {
   delete[] data;
 }
 
+void dump_xint(int fd, off_t off, size_t len) {
+  unsigned int* data = new unsigned int[len];
+  size_t nbyte = len * sizeof(unsigned int);
+  pread(fd, data, nbyte, off);
+  for (size_t i = 0; i < len; i++) printf("[%8lu] [%16x]\n", i, data[i]);
+  delete[] data;
+}
+
 void dump_long(int fd, off_t off, size_t len) {
   long* data = new long[len];
   size_t nbyte = len * sizeof(long);
@@ -70,7 +78,7 @@ void dump_double(int fd, off_t off, size_t len) {
 
 int main(int argc, char** argv) {
   if (argc < 5) {
-    fprintf(stderr, "Usage:\n typedump file type[char | (u)int | (u)long | pointer | float | double] offset length\n");
+    fprintf(stderr, "Usage:\n typedump file type[char | (u,x)int | (u)long | pointer | float | double] offset length\n");
     return 1;
   }
 
@@ -90,6 +98,7 @@ int main(int argc, char** argv) {
   if (strcmp(type, "char") == 0)          dump_char(fd, off, len);
   else if (strcmp(type, "int") == 0)      dump_int(fd, off, len);
   else if (strcmp(type, "uint") == 0)     dump_uint(fd, off, len);
+  else if (strcmp(type, "xint") == 0)     dump_xint(fd, off, len);
   else if (strcmp(type, "long") == 0)     dump_long(fd, off, len);
   else if (strcmp(type, "ulong") == 0)    dump_ulong(fd, off, len);
   else if (strcmp(type, "pointer") == 0)  dump_pointer(fd, off, len);
