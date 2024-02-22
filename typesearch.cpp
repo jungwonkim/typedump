@@ -9,7 +9,7 @@ int SEARCH_BUFFER = 2048;
 
 template <typename T>
 void search_type(int fd, T* search, int count) {
-  T* buffer = (T*) malloc(SEARCH_BUFFER * sizeof(T));
+  T* buffer = (T*) malloc(SEARCH_BUFFER + count * sizeof(T));
   size_t total_readed = 0;
   while (1) {
     int readed = read(fd, buffer, SEARCH_BUFFER);
