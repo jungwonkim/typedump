@@ -4,7 +4,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-int SEARCH_MORE   = 64;
+int SEARCH_MORE   = 16;
 int SEARCH_BUFFER = 2048;
 
 template <typename T>
