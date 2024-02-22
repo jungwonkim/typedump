@@ -4,13 +4,15 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#define SEARCH_MORE 64
+int SEARCH_MORE   = 64;
+int SEARCH_BUFFER = 2048;
 
 template <typename T>
 void search_type(int fd, T* search, int count) {
-  T* buffer = (T*) malloc(1024);
+  T* buffer = (T*) malloc(SEARCH_BUFFER * sizeof(T));
+  size_t total_readed = 0;
   while (1) {
-    int readed = read(fd, buffer, 1024);
+    int readed = read(fd, buffer, SEARCH_BUFFER);
     if (readed == -1) {
       perror("read file");
       return;
@@ -22,7 +24,8 @@ void search_type(int fd, T* search, int count) {
       for (int i = 0; i < count; i++) {
         if (p[i] == search[i]) {
           if (all_match && i == count - 1) {
-            printf("Found! ");
+            size_t found = total_readed + (p - buffer) * sizeof(T);
+            printf("[0x%lx, %lu] ", found, found);
             for (int j = 0; j < i + SEARCH_MORE; j++) printf("%d ", p[j]);
             printf("\n");
           }
@@ -32,6 +35,7 @@ void search_type(int fd, T* search, int count) {
         }
       }
     }
+    total_readed += readed;
   }
   free(buffer);
 }
@@ -45,7 +49,10 @@ int main(int argc, char** argv) {
   char* file = argv[1];
   char* type = argv[2];
 
-  printf("[typesearch] file[%s] type[%s]\n", file, type);
+  if (getenv("SEARCH_MORE"))   SEARCH_MORE   = atoi(getenv("SEARCH_MORE"));
+  if (getenv("SEARCH_BUFFER")) SEARCH_BUFFER = atoi(getenv("SEARCH_BUFFER"));
+
+  printf("[typesearch] file[%s] type[%s] $SEARCH_MORE[%d] $SEARCH_BUFFER[%d]\n", file, type, SEARCH_MORE, SEARCH_BUFFER);
   int fd = open(file, O_RDONLY);
   if (fd == -1) {
     perror("open file");
