@@ -8,7 +8,7 @@ int SEARCH_MORE   = 16;
 int SEARCH_BUFFER = 2048;
 
 template <typename T>
-void search_type(int fd, T* search, int count) {
+void search(int fd, T* needles, int count, const char* fmt) {
   T* buffer = (T*) malloc(SEARCH_BUFFER + count * sizeof(T));
   size_t total_readed = 0;
   while (1) {
@@ -20,19 +20,15 @@ void search_type(int fd, T* search, int count) {
     if (readed == 0) break;
     T* end = buffer + readed / sizeof(T);
     for (T* p = buffer; p < end; p++) {
-      int all_match = 1;
       for (int i = 0; i < count; i++) {
-        if (p[i] == search[i]) {
-          if (all_match && i == count - 1) {
+        if (p[i] == needles[i]) {
+          if (i == count - 1) {
             size_t found = total_readed + (p - buffer) * sizeof(T);
             printf("[0x%lx, %lu] ", found, found);
-            for (int j = 0; j < i + SEARCH_MORE; j++) printf("%d ", p[j]);
+            for (int j = 0; j < i + SEARCH_MORE; j++) printf(fmt, p[j]);
             printf("\n");
           }
-        } else {
-          all_match = 0;
-          break;
-        }
+        } else break;
       }
     }
     total_readed += readed;
@@ -42,7 +38,7 @@ void search_type(int fd, T* search, int count) {
 
 int main(int argc, char** argv) {
   if (argc < 4) {
-    fprintf(stderr, "Usage:\n typesearch file type[char | (u)int | (u)long | pointer | float | double] search_values\n");
+    fprintf(stderr, "Usage:\n typesearch file type[char | (u|x)int | (u)long | float | double] search_values\n");
     return 1;
   }
 
@@ -59,16 +55,35 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  size_t search_len = argc - 3;
+  size_t count = argc - 3;
 
-  if (strcmp(type, "int") == 0) {
-    int *search = (int*) malloc(search_len * sizeof(int));
-    for (int i = 0; i < argc - 3; i++) search[i] = atoi(argv[i + 3]);
-    search_type<int>(fd, search, search_len);
+  if (strcmp(type, "char") == 0) {
+    char* needles = new char[count];
+    for (int i = 0; i < argc - 3; i++) needles[i] = static_cast<char>(atoi(argv[i + 3]));
+    search<char>(fd, needles, count, "%d ");
+  } else if (strcmp(type, "int") == 0) {
+    int* needles = new int[count];
+    for (int i = 0; i < argc - 3; i++) needles[i] = atoi(argv[i + 3]);
+    search<int>(fd, needles, count, "%d ");
   } else if (strcmp(type, "uint") == 0) {
-    unsigned int *search = (unsigned int*) malloc(search_len * sizeof(unsigned int));
-    for (int i = 0; i < argc - 3; i++) search[i] = atoi(argv[i + 3]);
-    search_type<unsigned int>(fd, search, search_len);
+    unsigned int* needles = new unsigned int[count];
+    for (int i = 0; i < argc - 3; i++) needles[i] = static_cast<unsigned int>(atoi(argv[i + 3]));
+    search<unsigned int>(fd, needles, count, "%u ");
+  } else if (strcmp(type, "xint") == 0) {
+    unsigned int* needles = new unsigned int[count];
+    for (int i = 0; i < argc - 3; i++) needles[i] = static_cast<unsigned int>(strtol(argv[i + 3], NULL, 16));
+    search<unsigned int>(fd, needles, count, "%x ");
+  } else if (strcmp(type, "float") == 0) {
+    float* needles = new float[count];
+    for (int i = 0; i < argc - 3; i++) needles[i] = static_cast<float>(atof(argv[i + 3]));
+    search<float>(fd, needles, count, "%f ");
+  } else if (strcmp(type, "double") == 0) {
+    double* needles = new double[count];
+    for (int i = 0; i < argc - 3; i++) needles[i] = atof(argv[i + 3]);
+    search<double>(fd, needles, count, "%lf ");
+  } else {
+    fprintf(stderr, "Unknown type: %s\n", type);
+    return 1;
   }
 
   return 0;
